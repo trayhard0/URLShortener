@@ -29,3 +29,8 @@ Why:
 	Encoding the database ID in Base62 makes it possible for a user to walk through each link. This is too predictable
 	Hashing means the same URL always gets the same code, so two users tracking the same page would share one link and one click history. Different URLs could also collide.
 	Generating a random code solves this issue. Each user gets a unique code because the code column is UNIQUE. This means the database rejects duplicates so I retry if the generated code is not accepted. Two links would have two different codes so each user gets their own metrics.
+
+#8 301 or 302 redirects
+Decision: 302 redirects
+Why:
+    301 redirects are cached by the browser. Tracking clicks would be ineffective because after the first click, using the url in the future bypasses the server and I would not be able to track the number of clicks. The downside of using 302 is that the user goes through the server every time which is additional load. 301 redirects would reduce the number of requests and would be the right choice if I was not tracking anything.
