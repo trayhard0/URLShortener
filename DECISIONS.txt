@@ -34,3 +34,11 @@ Why:
 Decision: 302 redirects
 Why:
     301 redirects are cached by the browser. Tracking clicks would be ineffective because after the first click, using the url in the future bypasses the server and I would not be able to track the number of clicks. The downside of using 302 is that the user goes through the server every time which is additional load. 301 redirects would reduce the number of requests and would be the right choice if I was not tracking anything.
+
+#9 File structure
+Considered:
+    Layers like controller, service, repository, model, and dto
+    One folder per feature like link/
+Decision: Layers
+Why:
+    I believe separating by features is better for larger applications but for an application with a few features I believe separating the layers will be more effective. This is because with only a few features, a layered folder structure keeps the number of folders small and classes of the same kind sit in the same place. My thought process also looks at the application in layers so the folder structure aligns with my view.

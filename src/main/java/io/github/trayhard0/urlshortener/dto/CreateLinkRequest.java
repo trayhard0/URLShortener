@@ -1,4 +1,4 @@
-package io.github.trayhard0.urlshortener;
+package io.github.trayhard0.urlshortener.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

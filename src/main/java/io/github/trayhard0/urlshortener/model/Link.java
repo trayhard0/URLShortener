@@ -1,4 +1,4 @@
-package io.github.trayhard0.urlshortener;
+package io.github.trayhard0.urlshortener.model;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
