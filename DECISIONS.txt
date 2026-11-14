@@ -1,0 +1,31 @@
+#1 Flyway migrations with ddl-auto=validate
+Why: Flyway is the source of truth so having ddl-auto=validate makes sure Hibernate does not modify, update, or delete the schema
+
+#2 Postgres in Docker Compose on host port 5433
+Why: I already had PostgreSQL 18 using port 5432 so using a different port allows both to run at once
+
+#3 Config from environment variables
+Why: .env is used to store passwords and credentials. The same code is able to run on my laptop and AWS by only changing the environment values. .env.example is also included as an example
+
+#4 TIMESTAMPTZ instead of TIMESTAMP
+Why: TIMESTAMPTZ converts the time to UTC while TIMESTAMP does not. With TIMESTAMP, 9:00 AM in Singapore and 9:00 AM in New York look identical. TIMESTAMPTZ prevents issues with comparisons like if a link has expired.
+
+#5 One row per click instead of a counter on links
+Why: This allows better metrics like how many clicks on each day and where each click came from.
+
+#6 ON DELETE CASCADE
+Why: Once a link is deleted, the clicks associated with it no longer matter as the data and metrics cannot be used anymore.
+
+#7 How to generate the short codes
+Context:
+	7 characters from Base62 (a-z,A-Z,0-9) is ~3.52 Trillion combinations so collisions are very rare
+	Randomness comes from the SecureRandom (java.security) instead of Random because Random is predictable
+Considered:
+	Encode the database ID in Base62
+	Generate a random code
+	Hash the long URL and keep the first few characters
+Decision: Generate a random code
+Why:
+	Encoding the database ID in Base62 makes it possible for a user to walk through each link. This is too predictable
+	Hashing means the same URL always gets the same code, so two users tracking the same page would share one link and one click history. Different URLs could also collide.
+	Generating a random code solves this issue. Each user gets a unique code because the code column is UNIQUE. This means the database rejects duplicates so I retry if the generated code is not accepted. Two links would have two different codes so each user gets their own metrics.
