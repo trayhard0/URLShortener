@@ -50,7 +50,7 @@ Decision: 32 bytes
 Why:
 	Using a token length the same as the short url code would not work because the number of combinations is guessable. 12 base62 chars is around 71 bits which holds up today but is not future proof against the 128 bits that security guidance recommends. The chosen hash function is SHA-256 and its possible to run through billions of combinations per second. 32 random bytes is 2^256 possible combinations.
 
-#11 Token design: How its turned into text:
+#11 Token design: How its turned into text
 Considered:
 	Hex, Base64
 Decision: Base64
@@ -70,3 +70,23 @@ Considered:
 Decision: Two classes
 Why:
 	Even though they are connected, creating and hashing a token are two separate tasks. By separating the two into individual classes the purpose of each class is clear. Also when a user wants to see information about the shortened url we need to hash their token and compare it which has nothing to do with creating a token.
+
+#14 Link Service: Retry strategy
+Considered:
+	3, 5, 10
+Decision: 3
+Why:
+	7 characters of base62 creates ~3.52 trillion combinations. Collisions are statistically negligible at this scale. Even with millions of stored links, the probability of three consecutive collisions is approximately 1 in 40 quadrillion. Therefore if three consecutive attempts fail, it indicates an underlying system issue rather than bad luck. Capping retries at 3 allows the application to fail fast and avoid wasting database round trips. If retries are exhausted, an IllegalStateException is thrown.
+
+#15 Link Service: Retry loop
+Considered:
+	for loop inside try-catch, try-catch inside for loop
+Decision: try-catch inside for loop
+Why:
+	If the for loop was located inside the try block, any collision would immediately jump to the catch block which aborts subsequent retries. Placing the try-catch inside the loop isolates each attempt so a collision can be logged and the next iteration can proceed.
+
+#16 Link Service: Transaction Boundary
+Considered: method-level @Transactional vs per-operation transaction
+Decision: Per-operation transaction
+Why:
+	In PostgreSQL and Spring Data JPA a unique constraint violation marks the transaction as aborted. This means if the entire service method was annotated with @Transactional, the first collision would poison the transaction and all subsequent attempts in the loop would fail with an aborted transaction error. By omitting @Transactional on the service method and using repository.saveAndFlush(), each attempt is its own isolated transaction managed by Spring Data JPA.
