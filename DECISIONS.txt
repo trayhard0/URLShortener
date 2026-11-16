@@ -42,3 +42,31 @@ Considered:
 Decision: Layers
 Why:
     I believe separating by features is better for larger applications but for an application with a few features I believe separating the layers will be more effective. This is because with only a few features, a layered folder structure keeps the number of folders small and classes of the same kind sit in the same place. My thought process also looks at the application in layers so the folder structure aligns with my view.
+
+#10 Token design: Token Length
+Considered: 
+	7 base62 chars, 12 base62 chars, 32 bytes
+Decision: 32 bytes
+Why:
+	Using a token length the same as the short url code would not work because the number of combinations is guessable. 12 base62 chars is around 71 bits which holds up today but is not future proof against the 128 bits that security guidance recommends. The chosen hash function is SHA-256 and its possible to run through billions of combinations per second. 32 random bytes is 2^256 possible combinations.
+
+#11 Token design: How its turned into text:
+Considered:
+	Hex, Base64
+Decision: Base64
+Why:
+	The primary reason I chose Base64 (URL-safe) over Hex is the length difference (43 vs 64).
+
+#12 Token design: Hash Choice
+Considered:
+	SHA-256, Argon2ID
+Decision: Sha-256
+Why:
+	Argon2ID is primarily for hashing user generated passwords which are short and repeated. Each token is 256 bits which is long and random. Argon2ID is also deliberately slow and memory hungry to slow the speed of guesses. SHA-256 is appropriate here because guessing a 256 bit token is unrealistic even with a machine guessing billions of combinations per second. 
+
+#13 Token design: Structure
+Considered:
+	One class, Two classes
+Decision: Two classes
+Why:
+	Even though they are connected, creating and hashing a token are two separate tasks. By separating the two into individual classes the purpose of each class is clear. Also when a user wants to see information about the shortened url we need to hash their token and compare it which has nothing to do with creating a token.
