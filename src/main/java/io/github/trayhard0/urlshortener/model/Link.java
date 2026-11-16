@@ -25,4 +25,31 @@ public class Link {
     private Instant createdAt;
     private Instant expiresAt;
 
+    protected Link() {}
+
+    public Link(String code, String originalUrl, String manageTokenHash, Instant createdAt) {
+        this.code = code;
+        this.originalUrl = originalUrl;
+        this.manageTokenHash = manageTokenHash;
+        this.createdAt = createdAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+    public String getCode() {
+        return code;
+    }
+    public String getOriginalUrl() {
+        return originalUrl;
+    }
+    public String getManageTokenHash() {
+        return manageTokenHash;
+    }
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+    public Instant getExpiresAt() {
+        return expiresAt;
+    }
 }
