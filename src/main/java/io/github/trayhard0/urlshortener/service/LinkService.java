@@ -1,12 +1,13 @@
 package io.github.trayhard0.urlshortener.service;
 
-
+import io.github.trayhard0.urlshortener.exception.BadRequestException;
 import io.github.trayhard0.urlshortener.model.Link;
 import io.github.trayhard0.urlshortener.repository.LinkRepository;
 import io.github.trayhard0.urlshortener.util.ShortCodeGenerator;
 import io.github.trayhard0.urlshortener.util.TokenGenerator;
 import io.github.trayhard0.urlshortener.util.TokenHasher;
 
+import io.github.trayhard0.urlshortener.util.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,19 +24,24 @@ public class LinkService {
     private final ShortCodeGenerator shortCodeGenerator;
     private final TokenGenerator tokenGenerator;
     private final TokenHasher tokenHasher;
+    private final UrlValidator urlValidator;
 
     private static final Logger log = LoggerFactory.getLogger(LinkService.class);
 
-    public LinkService(LinkRepository linkRepository, ShortCodeGenerator shortCodeGenerator, TokenGenerator tokenGenerator, TokenHasher tokenHasher) {
+    public LinkService(LinkRepository linkRepository, ShortCodeGenerator shortCodeGenerator, TokenGenerator tokenGenerator, TokenHasher tokenHasher, UrlValidator urlValidator) {
         this.linkRepository = linkRepository;
         this.shortCodeGenerator = shortCodeGenerator;
         this.tokenGenerator = tokenGenerator;
         this.tokenHasher = tokenHasher;
+        this.urlValidator = urlValidator;
     }
 
     public record CreatedLink(Link link, String rawToken) {}
 
     public CreatedLink createLink(String originalUrl) {
+        if(!urlValidator.isValid(originalUrl))
+            throw new BadRequestException("Invalid or disallowed URL");
+
         String rawToken = tokenGenerator.generate();
         String tokenHash = tokenHasher.hash(rawToken);
 

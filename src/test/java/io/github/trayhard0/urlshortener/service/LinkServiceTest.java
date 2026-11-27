@@ -1,10 +1,12 @@
 package io.github.trayhard0.urlshortener.service;
 
+import io.github.trayhard0.urlshortener.exception.BadRequestException;
 import io.github.trayhard0.urlshortener.model.Link;
 import io.github.trayhard0.urlshortener.repository.LinkRepository;
 import io.github.trayhard0.urlshortener.util.ShortCodeGenerator;
 import io.github.trayhard0.urlshortener.util.TokenGenerator;
 import io.github.trayhard0.urlshortener.util.TokenHasher;
+import io.github.trayhard0.urlshortener.util.UrlValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -33,6 +35,9 @@ public class LinkServiceTest {
     @Mock
     private TokenHasher tokenHasher;
 
+    @Mock
+    private UrlValidator urlValidator;
+
     @InjectMocks
     private LinkService linkService;
 
@@ -43,6 +48,7 @@ public class LinkServiceTest {
         when(tokenGenerator.generate()).thenReturn("raw-token-abc");
         when(tokenHasher.hash("raw-token-abc")).thenReturn("hashed-token-hex");
         when(linkRepository.saveAndFlush(any(Link.class))).thenReturn(expectedLink);
+        when(urlValidator.isValid("https://example.com")).thenReturn(true);
         LinkService.CreatedLink result = linkService.createLink("https://example.com");
         assertEquals("raw-token-abc", result.rawToken());
         assertEquals("abc1234", result.link().getCode());
@@ -58,6 +64,7 @@ public class LinkServiceTest {
         when(linkRepository.saveAndFlush(any(Link.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate code"))
                 .thenReturn(expectedLink);
+        when(urlValidator.isValid("https://example.com")).thenReturn(true);
         LinkService.CreatedLink result = linkService.createLink("https://example.com");
 
         assertEquals("raw-token-abc", result.rawToken());
@@ -76,12 +83,22 @@ public class LinkServiceTest {
         when(linkRepository.saveAndFlush(any(Link.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate code"));
 
+        when(urlValidator.isValid("https://example.com")).thenReturn(true);
         assertThrows(IllegalStateException.class, () -> {
             linkService.createLink("https://example.com");
         });
 
         verify(shortCodeGenerator, times(3)).generate();
         verify(linkRepository, times(3)).saveAndFlush(any(Link.class));
+    }
+
+    @Test
+    public void shouldThrowBadRequestExceptionWhenUrlNotValid() {
+        when(urlValidator.isValid("not-a-url")).thenReturn(false);
+        assertThrows(BadRequestException.class, () -> {
+            linkService.createLink("not-a-url");
+        });
+        verifyNoInteractions(shortCodeGenerator, tokenGenerator, tokenHasher, linkRepository);
     }
 
     @Test
